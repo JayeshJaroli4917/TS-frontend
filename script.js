@@ -1,24 +1,20 @@
-/**************** DEVICE DETECTION ****************/
 const isTouchDevice =
   "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
-/**************** KEYBOARD VARIABLES ****************/
+
 let keyDownTimes = {};
 let lastKeyReleaseTime = null;
 let individualKeys = [];
 let digraphs = [];
-
-/**************** TOUCH VARIABLES ****************/
 let touchKeystrokes = [];
 let lastInputTime = null;
 let lastValueLength = 0;
+let lastTouchKeyData = null;
 
-/**************** TEST CONTROL ****************/
 let duration = 30;
 let timerInterval;
 let testCompleted = false;
 
-/**************** DOM ELEMENTS ****************/
 const area = document.getElementById("typingArea");
 const startBtn = document.getElementById("startBtn");
 const submitBtn = document.getElementById("submitBtn");
@@ -26,7 +22,6 @@ const timerDisplay = document.getElementById("timer");
 const usernameInput = document.getElementById("username");
 const referenceTextEl = document.getElementById("referenceText");
 
-/**************** SECURITY RESTRICTIONS ****************/
 document.addEventListener("contextmenu", e => e.preventDefault());
 ["copy", "paste", "cut", "drop"].forEach(evt =>
   document.addEventListener(evt, e => e.preventDefault())
@@ -38,7 +33,6 @@ document.addEventListener("keydown", e => {
   }
 });
 
-/**************** WORD GENERATOR ****************/
 const DICTIONARY = [
   "time","people","year","day","way","thing","world","life","hand","part",
   "child","eye","place","work","week","case","point","government","company","number",
@@ -66,7 +60,6 @@ function extendWordsIfNeeded(typedLength) {
   }
 }
 
-/**************** START TEST ****************/
 startBtn.onclick = () => {
   const username = usernameInput.value.trim();
   if (!username) {
@@ -74,7 +67,6 @@ startBtn.onclick = () => {
     return;
   }
 
-  // Reset all data
   keyDownTimes = {};
   individualKeys = [];
   digraphs = [];
@@ -82,6 +74,7 @@ startBtn.onclick = () => {
   lastKeyReleaseTime = null;
   lastInputTime = null;
   lastValueLength = 0;
+  lastTouchKeyData = null;
   testCompleted = false;
   duration = 30;
 
@@ -93,12 +86,12 @@ startBtn.onclick = () => {
   submitBtn.disabled = true;
 
   loadInitialWords();
-  timerDisplay.textContent = "Time Left: 5:00";
+  timerDisplay.textContent = "Time Left: 0:30";
 
   timerInterval = setInterval(() => {
     duration--;
     timerDisplay.textContent =
-      `Time Left: ${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}`;
+      `Time Left: 0:${String(duration).padStart(2, "0")}`;
 
     if (duration <= 0) {
       clearInterval(timerInterval);
@@ -110,7 +103,6 @@ startBtn.onclick = () => {
   }, 1000);
 };
 
-/**************** DESKTOP KEYBOARD CAPTURE ****************/
 area.addEventListener("keydown", e => {
   if (!isTouchDevice && !keyDownTimes[e.code]) {
     keyDownTimes[e.code] = performance.now();
@@ -129,7 +121,7 @@ area.addEventListener("keyup", e => {
     ? pressTime - lastKeyReleaseTime
     : 0;
 
-  individualKeys.push({
+  const keyData = {
     key: e.key,
     code: e.code,
     pressTime,
@@ -137,7 +129,9 @@ area.addEventListener("keyup", e => {
     holdTime_HT: holdTime,
     flightTime_FT: flightTime,
     device: "keyboard"
-  });
+  };
+
+  individualKeys.push(keyData);
 
   if (individualKeys.length >= 2) {
     const k1 = individualKeys[individualKeys.length - 2];
@@ -149,7 +143,8 @@ area.addEventListener("keyup", e => {
       RP: k2.pressTime - k1.releaseTime,
       RR: k2.releaseTime - k1.releaseTime,
       PR: k2.releaseTime - k1.pressTime,
-      D: k2.releaseTime - k1.pressTime
+      D:  k2.releaseTime - k1.pressTime,
+      device: "keyboard"
     });
   }
 
@@ -157,7 +152,6 @@ area.addEventListener("keyup", e => {
   delete keyDownTimes[e.code];
 });
 
-/**************** TOUCH KEYBOARD CAPTURE ****************/
 area.addEventListener("input", () => {
   const now = performance.now();
   const value = area.value;
@@ -166,14 +160,44 @@ area.addEventListener("input", () => {
 
   if (!isTouchDevice) return;
 
-  // Only capture additions (ignore deletions/autocorrect)
   if (value.length <= lastValueLength) {
     lastValueLength = value.length;
     return;
   }
 
   const char = value[value.length - 1];
-  const flightTime = lastInputTime ? now - lastInputTime : 0;
+
+  const pressTime = now;
+  const releaseTime = now;
+  const holdTime = 0;
+  const flightTime = lastInputTime ? pressTime - lastInputTime : 0;
+
+  const currentKeyData = {
+    key: char,
+    code: "TouchKey",
+    pressTime,
+    releaseTime,
+    holdTime_HT: holdTime,
+    flightTime_FT: flightTime,
+    device: "touch"
+  };
+
+  individualKeys.push(currentKeyData);
+
+  if (lastTouchKeyData) {
+    const k1 = lastTouchKeyData;
+    const k2 = currentKeyData;
+
+    digraphs.push({
+      digraph: k1.key + k2.key,
+      PP: k2.pressTime - k1.pressTime,
+      RP: k2.pressTime - k1.releaseTime,
+      RR: k2.releaseTime - k1.releaseTime,
+      PR: k2.releaseTime - k1.pressTime,
+      D:  k2.releaseTime - k1.pressTime,
+      device: "touch"
+    });
+  }
 
   touchKeystrokes.push({
     key: char,
@@ -182,11 +206,11 @@ area.addEventListener("input", () => {
     device: "touch"
   });
 
-  lastInputTime = now;
+  lastTouchKeyData = currentKeyData;
+  lastInputTime = pressTime;
   lastValueLength = value.length;
 });
 
-/**************** SUBMIT DATA ****************/
 submitBtn.onclick = async () => {
   if (!testCompleted) return;
 
@@ -203,9 +227,9 @@ submitBtn.onclick = async () => {
     touchKeystrokes
   };
 
-   try {
+  try {
     const response = await fetch(
-     "https://ts-backend-three.vercel.app/api/submit",
+      "https://ts-backend-three.vercel.app/api/submit",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -214,9 +238,8 @@ submitBtn.onclick = async () => {
     );
 
     if (!response.ok) throw new Error();
-
-      alert("Data submitted Successfully!");
-    } catch (err) {
+    alert("Data submitted Successfully!");
+  } catch (err) {
     alert("Submission failed. Try again.");
     submitBtn.disabled = false;
   }
