@@ -1,0 +1,88 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  max-width: 700px;            
+  margin: auto;
+  padding: 25px;
+  background: #ffffff;
+}
+
+input,textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  margin-top: 8px;
+  box-sizing: border-box;
+}
+
+textarea {
+  height: 170px;
+  resize: none;
+}
+
+button {
+  margin-top: 14px;
+  padding: 12px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #3498db;
+  color: white;
+}
+
+button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+#timer {
+  font-weight: bold;
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.reference-text {
+  font-size: 20px;
+  line-height: 1.8;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  user-select: none;
+  margin-bottom: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+.char {
+  color: #999;
+}
+
+.char.correct {
+  color: #2ecc71;
+}
+
+.char.incorrect {
+  color: #e74c3c;
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 15px;
+  }
+
+  .reference-text {
+    font-size: 18px;
+  }
+
+  textarea {
+    height: 150px;
+    font-size: 17px;
+  }
+
+  button {
+    width: 100%;
+    font-size: 18px;
+  }
+}

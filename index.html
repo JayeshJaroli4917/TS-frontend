@@ -1,44 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>TouchScren Keystroke</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<html lang="en"> 
+    <head>
+        <meta charset="UTF-8">
+        <title>KeyLogger</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <h2>Keystroke Data Collection</h2>
+        <label >User Name</label>
+        <input type="text" id="username" placeholder="Enter your Name...">
+    
+    <p id="timer">Time left: 5:00</p>
+    <div id="referenceText" class="reference-text">
+</div>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    textarea, input, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
+    <textarea  id="typingArea" disabled placeholder="Start Typing..."></textarea>
+    
+    <button id="startBtn">Start Test</button>
+    <button id="submitBtn">Submit</button>
 
-  <h2>Keystroke Dynamics Test</h2>
-
-  <input id="username" placeholder="Enter username" />
-
-  <textarea
-    id="typingArea"
-    placeholder="Start typing here..."
-    autofocus
-  ></textarea>
-
-  <button id="startBtn">Start Test</button>
-  <button id="submitBtn">Submit</button>
-
-  <p>Time Left: <span id="timer">60</span> seconds</p>
-
-  <script src="script.js"></script>
-</body>
+    
+    <script src="script.js"></script> 
+    </body>
 </html>
