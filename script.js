@@ -1,15 +1,24 @@
+/**************** DEVICE DETECTION ****************/
+const isTouchDevice =
+  "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+/**************** KEYBOARD VARIABLES ****************/
 let keyDownTimes = {};
 let lastKeyReleaseTime = null;
-
 let individualKeys = [];
 let digraphs = [];
 
-let duration = 300;
+/**************** TOUCH VARIABLES ****************/
+let touchKeystrokes = [];
+let lastInputTime = null;
+let lastValueLength = 0;
+
+/**************** TEST CONTROL ****************/
+let duration = 30;
 let timerInterval;
 let testCompleted = false;
-let lastValue = "";
-let lastInputTime = null;
 
+/**************** DOM ELEMENTS ****************/
 const area = document.getElementById("typingArea");
 const startBtn = document.getElementById("startBtn");
 const submitBtn = document.getElementById("submitBtn");
@@ -17,39 +26,30 @@ const timerDisplay = document.getElementById("timer");
 const usernameInput = document.getElementById("username");
 const referenceTextEl = document.getElementById("referenceText");
 
+/**************** SECURITY RESTRICTIONS ****************/
 document.addEventListener("contextmenu", e => e.preventDefault());
-["copy", "paste", "cut", "drop"].forEach(evt => {
-  document.addEventListener(evt, e => e.preventDefault());
-});
+["copy", "paste", "cut", "drop"].forEach(evt =>
+  document.addEventListener(evt, e => e.preventDefault())
+);
+
 document.addEventListener("keydown", e => {
-  if (e.ctrlKey || e.metaKey) {
-    if (["c", "v", "x"].includes(e.key.toLowerCase())) {
-      e.preventDefault();
-    }
+  if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+    e.preventDefault();
   }
 });
 
+/**************** WORD GENERATOR ****************/
 const DICTIONARY = [
   "time","people","year","day","way","thing","world","life","hand","part",
   "child","eye","place","work","week","case","point","government","company","number",
   "group","problem","fact","be","have","do","say","get","make","go",
-  "know","take","see","come","think","look","want","give","use","find",
-  "tell","ask","work","seem","feel","try","leave","call","good","new",
-  "first","last","long","great","little","own","other","old","right","big",
-  "high","different","small","large","next","early","young","important","few","public",
-  "software","hardware","network","keyboard","screen","mouse","server","client",
-  "database","program","code","logic","algorithm","variable","function","object",
-  "class","method","framework","library","frontend","backend","api","request",
-  "response","security","performance","memory","storage","cloud"
+  "know","take","see","come","think","look","want","give","use","find"
 ];
 
 function generateRandomWords(count = 25) {
-  let words = [];
-  for (let i = 0; i < count; i++) {
-    const index = Math.floor(Math.random() * DICTIONARY.length);
-    words.push(DICTIONARY[index]);
-  }
-  return words.join(" ");
+  return Array.from({ length: count }, () =>
+    DICTIONARY[Math.floor(Math.random() * DICTIONARY.length)]
+  ).join(" ");
 }
 
 let referenceText = "";
@@ -66,16 +66,24 @@ function extendWordsIfNeeded(typedLength) {
   }
 }
 
+/**************** START TEST ****************/
 startBtn.onclick = () => {
+  const username = usernameInput.value.trim();
+  if (!username) {
+    alert("Enter username");
+    return;
+  }
+
+  // Reset all data
   keyDownTimes = {};
-  lastKeyReleaseTime = null;
   individualKeys = [];
   digraphs = [];
-  testCompleted = false;
-  duration = 300;
-
-  lastValue = "";
+  touchKeystrokes = [];
+  lastKeyReleaseTime = null;
   lastInputTime = null;
+  lastValueLength = 0;
+  testCompleted = false;
+  duration = 30;
 
   area.value = "";
   area.disabled = false;
@@ -85,7 +93,6 @@ startBtn.onclick = () => {
   submitBtn.disabled = true;
 
   loadInitialWords();
-
   timerDisplay.textContent = "Time Left: 5:00";
 
   timerInterval = setInterval(() => {
@@ -103,53 +110,33 @@ startBtn.onclick = () => {
   }, 1000);
 };
 
-area.addEventListener("input", () => {
-  extendWordsIfNeeded(area.value.length);
-});
-
+/**************** DESKTOP KEYBOARD CAPTURE ****************/
 area.addEventListener("keydown", e => {
-  if (!keyDownTimes[e.code]) {
+  if (!isTouchDevice && !keyDownTimes[e.code]) {
     keyDownTimes[e.code] = performance.now();
   }
 });
 
 area.addEventListener("keyup", e => {
+  if (isTouchDevice) return;
+
   const releaseTime = performance.now();
   const pressTime = keyDownTimes[e.code];
   if (!pressTime) return;
 
-  recordKeystroke(e.key, e.code, pressTime, releaseTime);
-  delete keyDownTimes[e.code];
-});
-
-area.addEventListener("input", e => {
-  const now = performance.now();
-  const currentValue = e.target.value;
-
-  if (currentValue.length > lastValue.length) {
-    const key = currentValue[currentValue.length - 1];
-    const pressTime = lastInputTime || now;
-    const releaseTime = now;
-
-    recordKeystroke(key, "touch", pressTime, releaseTime);
-    lastInputTime = now;
-  }
-
-  lastValue = currentValue;
-});
-function recordKeystroke(key, code, pressTime, releaseTime) {
   const holdTime = releaseTime - pressTime;
   const flightTime = lastKeyReleaseTime
     ? pressTime - lastKeyReleaseTime
     : 0;
 
   individualKeys.push({
-    key,
-    code,
+    key: e.key,
+    code: e.code,
     pressTime,
     releaseTime,
     holdTime_HT: holdTime,
-    flightTime_FT: flightTime
+    flightTime_FT: flightTime,
+    device: "keyboard"
   });
 
   if (individualKeys.length >= 2) {
@@ -167,21 +154,54 @@ function recordKeystroke(key, code, pressTime, releaseTime) {
   }
 
   lastKeyReleaseTime = releaseTime;
-}
+  delete keyDownTimes[e.code];
+});
+
+/**************** TOUCH KEYBOARD CAPTURE ****************/
+area.addEventListener("input", () => {
+  const now = performance.now();
+  const value = area.value;
+
+  extendWordsIfNeeded(value.length);
+
+  if (!isTouchDevice) return;
+
+  // Only capture additions (ignore deletions/autocorrect)
+  if (value.length <= lastValueLength) {
+    lastValueLength = value.length;
+    return;
+  }
+
+  const char = value[value.length - 1];
+  const flightTime = lastInputTime ? now - lastInputTime : 0;
+
+  touchKeystrokes.push({
+    key: char,
+    timestamp: now,
+    flightTime_FT: flightTime,
+    device: "touch"
+  });
+
+  lastInputTime = now;
+  lastValueLength = value.length;
+});
+
+/**************** SUBMIT DATA ****************/
 submitBtn.onclick = async () => {
   if (!testCompleted) return;
+
+  submitBtn.disabled = true;
 
   const payload = {
     username: usernameInput.value.trim(),
     typedText: area.value.trim(),
-    charCount: area.value.length,
+    charCount: area.value.trim().length,
     timestamp: new Date().toISOString(),
-    device: /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : "desktop",
+    deviceType: isTouchDevice ? "touch" : "keyboard",
     individualKeys,
-    digraphs
+    digraphs,
+    touchKeystrokes
   };
-
-  submitBtn.disabled = true;
 
   try {
     const response = await fetch(
@@ -195,7 +215,7 @@ submitBtn.onclick = async () => {
 
     if (!response.ok) throw new Error();
     alert("Data submitted successfully!");
-  } catch (err) {
+  } catch {
     alert("Submission failed. Try again.");
     submitBtn.disabled = false;
   }
