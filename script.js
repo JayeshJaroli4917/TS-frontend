@@ -205,7 +205,7 @@ submitBtn.onclick = async () => {
 
    try {
     const response = await fetch(
-     "https://ts-backend-seven.vercel.app/api/submit",
+     "https://ts-backend-three.vercel.app/api/submit",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
