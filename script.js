@@ -203,7 +203,7 @@ submitBtn.onclick = async () => {
     touchKeystrokes
   };
 
-  try {
+   try {
     const response = await fetch(
       "https://ts-backend-seven.vercel.app/api/submit",
       {
@@ -214,8 +214,9 @@ submitBtn.onclick = async () => {
     );
 
     if (!response.ok) throw new Error();
-    alert("Data submitted successfully!");
-  } catch {
+
+      alert("Data submitted Successfully!");
+    } catch (err) {
     alert("Submission failed. Try again.");
     submitBtn.disabled = false;
   }
