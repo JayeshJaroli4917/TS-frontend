@@ -7,8 +7,6 @@ let digraphs = [];
 let duration = 300;
 let timerInterval;
 let testCompleted = false;
-
-// 🔹 Mobile helpers
 let lastValue = "";
 let lastInputTime = null;
 
@@ -19,7 +17,6 @@ const timerDisplay = document.getElementById("timer");
 const usernameInput = document.getElementById("username");
 const referenceTextEl = document.getElementById("referenceText");
 
-/* ---------------- ANTI-CHEAT ---------------- */
 document.addEventListener("contextmenu", e => e.preventDefault());
 ["copy", "paste", "cut", "drop"].forEach(evt => {
   document.addEventListener(evt, e => e.preventDefault());
@@ -32,7 +29,6 @@ document.addEventListener("keydown", e => {
   }
 });
 
-/* ---------------- DICTIONARY ---------------- */
 const DICTIONARY = [
   "time","people","year","day","way","thing","world","life","hand","part",
   "child","eye","place","work","week","case","point","government","company","number",
@@ -70,7 +66,6 @@ function extendWordsIfNeeded(typedLength) {
   }
 }
 
-/* ---------------- START TEST ---------------- */
 startBtn.onclick = () => {
   keyDownTimes = {};
   lastKeyReleaseTime = null;
@@ -108,12 +103,10 @@ startBtn.onclick = () => {
   }, 1000);
 };
 
-/* ---------------- TEXT EXTENSION ---------------- */
 area.addEventListener("input", () => {
   extendWordsIfNeeded(area.value.length);
 });
 
-/* ================= DESKTOP KEYBOARD ================= */
 area.addEventListener("keydown", e => {
   if (!keyDownTimes[e.code]) {
     keyDownTimes[e.code] = performance.now();
@@ -129,7 +122,6 @@ area.addEventListener("keyup", e => {
   delete keyDownTimes[e.code];
 });
 
-/* ================= MOBILE / TOUCH KEYBOARD ================= */
 area.addEventListener("input", e => {
   const now = performance.now();
   const currentValue = e.target.value;
@@ -145,8 +137,6 @@ area.addEventListener("input", e => {
 
   lastValue = currentValue;
 });
-
-/* ---------------- COMMON RECORD FUNCTION ---------------- */
 function recordKeystroke(key, code, pressTime, releaseTime) {
   const holdTime = releaseTime - pressTime;
   const flightTime = lastKeyReleaseTime
@@ -178,8 +168,6 @@ function recordKeystroke(key, code, pressTime, releaseTime) {
 
   lastKeyReleaseTime = releaseTime;
 }
-
-/* ---------------- SUBMIT ---------------- */
 submitBtn.onclick = async () => {
   if (!testCompleted) return;
 
