@@ -11,7 +11,7 @@ let lastInputTime = null;
 let lastValueLength = 0;
 let lastTouchKeyData = null;
 
-let duration = 30;
+let duration = 180;
 let timerInterval;
 let testCompleted = false;
 
@@ -51,7 +51,7 @@ function loadInitialWords() {
 }
 
 function extendWordsIfNeeded(typedLength) {
-  if (typedLength + 100 > referenceText.length) {
+  if (typedLength + 200 > referenceText.length) {
     referenceText += " " + generateRandomWords(20);
     referenceTextEl.textContent = referenceText;
   }
@@ -73,7 +73,7 @@ startBtn.onclick = () => {
   lastValueLength = 0;
   lastTouchKeyData = null;
   testCompleted = false;
-  duration = 30;
+  duration = 180;
 
   area.value = "";
   area.disabled = false;
