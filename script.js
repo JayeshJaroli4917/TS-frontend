@@ -83,7 +83,7 @@ startBtn.onclick = () => {
   submitBtn.disabled = true;
 
   loadInitialWords();
-  timerDisplay.textContent = "Time Left: 0:30";
+  timerDisplay.textContent = "Time Left: 3:00";
 
   timerInterval = setInterval(() => {
     duration--;
