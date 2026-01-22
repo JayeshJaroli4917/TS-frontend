@@ -34,10 +34,7 @@ document.addEventListener("keydown", e => {
 });
 
 const DICTIONARY = [
-  "time","people","year","day","way","thing","world","life","hand","part",
-  "child","eye","place","work","week","case","point","government","company","number",
-  "group","problem","fact","be","have","do","say","get","make","go",
-  "know","take","see","come","think","look","want","give","use","find"
+  "The sun dipped below the horizon, painting the sky in hues of orange and pink as the distant mountains stood silhouetted against the fading light, creating a serene moment of peace and quiet."
 ];
 
 function generateRandomWords(count = 25) {
